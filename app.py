@@ -622,13 +622,10 @@ def parse_contents(contents, filename):
             # Assume that the user uploaded a CSV file
             df = pd.read_csv(
                 io.StringIO(decoded.decode('utf-8')))
-            print('adaa 1')
         elif 'xls' in filename:
             # Assume that the user uploaded an excel file
             df = pd.read_excel(io.BytesIO(decoded))
-            print('adaa 2')
     except Exception as e:
-        print(e)
         return html.Div([
             'There was an error processing this file.'
         ])
@@ -762,8 +759,6 @@ def predict_data(list_content,filename):
         df = parse_contents(contents, filename)
 
         prediction = ValuePredictor(df.iloc[:,0])
-
-        print(prediction)
 
 
         df['label'] = prediction
