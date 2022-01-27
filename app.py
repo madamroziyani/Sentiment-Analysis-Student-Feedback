@@ -912,4 +912,4 @@ def update_output(sentiment):
 # automatically update HTML display if a change is made to code
 if __name__ == '__main__':
     
-    app.server.run(debug=True)
+    app.run_server(debug=True)
