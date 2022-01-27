@@ -6,18 +6,15 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input,Output,State
 import plotly.graph_objs as go
 import pandas as pd
-from datetime import date, datetime
 import plotly.express as px
 from urllib.request import urlopen
 import dash_table_experiments as dt
 import io
 import json
 import numpy as np
-import pickle
 from collections import defaultdict,Counter
 from nltk.corpus import stopwords
 import dash.dependencies as dd
-import dash_table
 from joblib import load
 from io import BytesIO
 import tensorflow as tf
@@ -26,7 +23,6 @@ from wordcloud import WordCloud
 import base64
 from transformers import DistilBertTokenizerFast
 from transformers import TFDistilBertForSequenceClassification
-import torch
 
 
 filename = "./model"
@@ -49,11 +45,6 @@ def ValuePredictor(to_predict):
 
 
 
-#read data for data story
-demo = pd.read_excel('https://github.com/aisyahrzk/newtest/blob/main/data/test.xlsx?raw=true')
-
-positive,negative,neutral = demo.iloc[:, 1].astype('str').value_counts()
-
 
 #non stop word corpus
 stop=set(stopwords.words('english'))
@@ -67,27 +58,6 @@ def create_corpus(target,data):
     return corpus
 
 
-# generate wordcloud image
-def plot_wordcloud(data,color):
-
-    comment_words = ''
-    
-    for val in data.iloc[:,0]: 
-      
-    # typecaste each val to string 
-        val = str(val) 
-  
-    # split the value 
-        tokens = val.split() 
-      
-    # Converts each token into lowercase 
-        for i in range(len(tokens)): 
-            tokens[i] = tokens[i].lower() 
-      
-        comment_words += " ".join(tokens)+" "
-
-    wc = WordCloud(background_color='white', width=380, height=360,colormap = color).generate(comment_words)
-    return wc.to_image()
 
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -128,7 +98,7 @@ sidebar = html.Div(
             [
                 dbc.NavLink("Home", href="/", active="exact"),
                 dbc.NavLink("Dashboard", href="/page-1", active="exact"),
-                dbc.NavLink("Analyze your own Dataset!", href="/page-2", active="exact"),
+
             ],
             vertical=True,
             pills=True,
@@ -212,159 +182,7 @@ html.Div(dcc.Markdown('''
             ]
 
 
-###############################################################################################3##############################
-
     elif pathname == "/page-1":
-        return [
-                #insert page content here
-html.Div([
-        html.Img(src=app.get_asset_url('graduation-cap.png'),
-                     id = 'jalurgemilang-image',
-                     style={'height': '60px',
-                            'width': 'auto',
-                            'margin-bottom': '25px',
-                            'display' : 'inline'
-}),  
-
-        html.H1('STUDENT FEEDBACK SENTIMENT ANALYSIS DASHBOARD',
-style = {
-    'display' : 'inline',
-    'textAlign':'center',
-    'color' : 'white',
-    'fontFamily': 'Roboto Mono',
-    'margin-left': '25px',
-    'fontSize': 30
-
-}),
-],style={'textAlign':'center'}),
-
-               html.Div([
-    
-html.Div([
-    
-   html.H6(children='TOTAL REVIEWS',
-                    style={'textAlign': 'center',
-                           'color': 'white'}),
-            html.P(f"{len(demo.index):,.0f}",
-                    style={'textAlign': 'center',
-                           'color': 'orange',
-                           'fontSize': 40})
-       
-        ], style={'width': '21%'},className='card_container three columns'),
-
-html.Div([
-    
-    html.H6(children='POSITIVE REVIEWS',
-                    style={'textAlign': 'center',
-                           'color': 'white'}),
-            html.P(f"{positive:,.0f}",
-                    style={'textAlign': 'center',
-                           'color': 'green',
-                           'fontSize': 40})
-       
-        ],style={'width': '21%'},className='card_container three columns'),
-
-html.Div([
-    html.H6(children='NEGATIVE REVIEWS',
-                    style={'textAlign': 'center',
-                           'color': 'white'}),
-            html.P(f"{negative:,.0f}",
-                    style={'textAlign': 'center',
-                           'color': 'red',
-                           'fontSize': 40})
-       
-        ],style={'width': '21%'},className='card_container three columns'),
-
-            
-html.Div([
- html.H6(children='NEUTRAL REVIEWS',
-                    style={'textAlign': 'center',
-                           'color': 'white'}),
-            html.P(f"{neutral:,.0f}",
-                    style={'textAlign': 'center',
-                           'color': 'gray',
-                           'fontSize': 40})
-       
-        ],style={'width': '21%'},className='card_container three columns'),
-],style = {'margin':'auto'},className='row flex-display'),
-
-html.Div(dcc.RadioItems(id='word',
-            options=[{'label': i, 'value': i} for i in ['Positive', 'Negative','Neutral']],
-            value='Positive',labelStyle={'float': 'center', 'display': 'inline-block'},
-            inputStyle={"margin-right": "20px"}
-            ), style={'textAlign': 'center',
-                'color': 'white',
-                'width': '100%',
-                'float': 'center',
-                'bgcolor': '#1f2c56',
-                'display': 'inline-block',
-                'margin-right':2
-            }
-           
-        ),
-
-html.Div([
-
-html.Div([
-    html.H6(children='Wordcloud',
-                    style={'textAlign': 'center',
-                           'color': 'white','size':20}),
-    html.Img(id = 'Wordcloud_img'),
-], className='create_container two columns'),
-
-    html.Div([
-dcc.Graph(id = 'pie_chart',figure = {'data': [go.Pie(
-            labels=['Positive', 'Negative', 'Neutral'],
-            values=[positive,negative,neutral],
-            marker=dict(colors= ['chartreuse', 'red', 'blue']),
-            hoverinfo='value',
-            textinfo='label+percent',
-            texttemplate = "%{label}:%{percent}",
-            hole=.7,
-            rotation=45,
-            # insidetextorientation= 'radial'
-
-        )],
-
-        'layout': go.Layout(
-            title={'text': 'Reviews: ' + 'Classification',
-                   'y': 0.93,
-                   'x': 0.5,
-                   'xanchor': 'center',
-                   'yanchor': 'top'},
-            titlefont={'color': 'white',
-                       'size': 20},
-            font=dict(family='Roboto Mono',
-                      color='white',
-                      size=12),
-            hovermode='closest',
-            paper_bgcolor='#1f2c56',
-            legend={'orientation': 'h',
-                    'bgcolor': '#1f2c56',
-                    'xanchor': 'center', 'x': 0.5, 'y': -0.7})}
-,config={'displayModeBar': 'hover'}
-
-),
-
- ], style={'width': '40%'},className='create_container two columns')
- 
-],style = {'margin':'auto'},className='row flex-display'),
-
-
-
-#bar chart for word frequency by sentiment
-html.Div([
-dcc.Graph(id ='word_frequency',config={'displayModeBar': 'hover'}
-
-)], style={'width': '1500'}, className='create_container five columns'),
- 
-
-
-                ]
-
-
-
-    elif pathname == "/page-2":
         return [
 
             html.H1('Generate your own dashboard!',
@@ -606,11 +424,6 @@ def result_predict(value):
  
         
 
-#@app.callback(dd.Output('image_wc', 'src'), Input('image_wc', 'id'))
-#def make_image(b):
- #   img = BytesIO()
- #   plot_wordcloud(demo).save(img, format='PNG')
-  #  return 'data:image/png;base64,{}'.format(base64.b64encode(img.getvalue()).decode())
         
 
 def parse_contents(contents, filename):
@@ -890,33 +703,6 @@ html.Div([
     ]
 
 
-@app.callback(Output('Wordcloud_img', 'src'),
-              Input('word', 'value'))
-def update_output(sentiment):
-
-        
-    if sentiment == 'Negative':
-        
-        img2 = BytesIO()
-        df_neg = demo[demo.iloc[:,1]==1]
-        plot_wordcloud(df_neg,'Reds').save(img2, format='PNG')
-        return 'data:image/png;base64,{}'.format(base64.b64encode(img2.getvalue()).decode())
-
-    elif sentiment == 'Neutral':
-        
-        img = BytesIO()
-        df_neut = demo[demo.iloc[:,1]==2]
-        plot_wordcloud(df_neut,'Greys').save(img, format='PNG')
-        
-        return 'data:image/png;base64,{}'.format(base64.b64encode(img.getvalue()).decode())
-
-    
-    elif sentiment == 'Positive':
-        
-        img = BytesIO()
-        df_pos = demo[demo.iloc[:,1]==1]
-        plot_wordcloud(df_pos,'Greens').save(img, format='PNG')
-        return 'data:image/png;base64,{}'.format(base64.b64encode(img.getvalue()).decode())
 
   
 
