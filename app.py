@@ -6,7 +6,6 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input,Output,State
 import plotly.graph_objs as go
 import pandas as pd
-import plotly.express as px
 from urllib.request import urlopen
 import io
 import json
@@ -14,10 +13,6 @@ import numpy as np
 from collections import defaultdict,Counter
 from nltk.corpus import stopwords
 import dash.dependencies as dd
-from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from joblib import load
 from io import BytesIO
 import tensorflow as tf
 import pandas as pd
@@ -25,7 +20,6 @@ from wordcloud import WordCloud
 import base64
 from transformers import DistilBertTokenizerFast
 from transformers import TFDistilBertForSequenceClassification
-import torch
 
 
 filename = "./model"
