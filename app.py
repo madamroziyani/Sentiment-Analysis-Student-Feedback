@@ -1,24 +1,32 @@
 from tabnanny import check
 import dash
-from dash import dcc
-from dash import html
+import dash_core_components as dcc
+import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input,Output,State
 import plotly.graph_objs as go
 import pandas as pd
+from datetime import date, datetime
+import plotly.express as px
 from urllib.request import urlopen
+import dash_table_experiments as dt
 import io
 import json
 import numpy as np
+import pickle
 from collections import defaultdict,Counter
 from nltk.corpus import stopwords
 import dash.dependencies as dd
+import dash_table
+from joblib import load
 from io import BytesIO
 import tensorflow as tf
 import pandas as pd
+from wordcloud import WordCloud
 import base64
 from transformers import DistilBertTokenizerFast
 from transformers import TFDistilBertForSequenceClassification
+import torch
 
 
 filename = "./model"
@@ -40,9 +48,9 @@ def ValuePredictor(to_predict):
     return predictions
 
 
-url_demo = 'https://github.com/aisyahrzk/newtest/blob/main/data/test.xlsx?raw=true'
+
 #read data for data story
-demo = pd.read_excel(url_demo)
+demo = pd.read_excel('https://github.com/aisyahrzk/newtest/blob/main/data/test.xlsx?raw=true')
 
 positive,negative,neutral = demo.iloc[:, 1].astype('str').value_counts()
 
@@ -59,7 +67,27 @@ def create_corpus(target,data):
     return corpus
 
 
+# generate wordcloud image
+def plot_wordcloud(data,color):
 
+    comment_words = ''
+    
+    for val in data.iloc[:,0]: 
+      
+    # typecaste each val to string 
+        val = str(val) 
+  
+    # split the value 
+        tokens = val.split() 
+      
+    # Converts each token into lowercase 
+        for i in range(len(tokens)): 
+            tokens[i] = tokens[i].lower() 
+      
+        comment_words += " ".join(tokens)+" "
+
+    wc = WordCloud(background_color='white', width=380, height=360,colormap = color).generate(comment_words)
+    return wc.to_image()
 
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -277,7 +305,12 @@ html.Div(dcc.RadioItems(id='word',
 
 html.Div([
 
-
+html.Div([
+    html.H6(children='Wordcloud',
+                    style={'textAlign': 'center',
+                           'color': 'white','size':20}),
+    html.Img(id = 'Wordcloud_img'),
+], className='create_container two columns'),
 
     html.Div([
 dcc.Graph(id = 'pie_chart',figure = {'data': [go.Pie(
@@ -403,7 +436,7 @@ dcc.Graph(id ='output-wordfreq',config={'displayModeBar': 'hover'}
 ]),
 
 html.Div([
-    
+
     html.Button("Download CSV File of labelled reviews!", id="btn_csv"),
         dcc.Download(id="download-dataframe-csv"),
 
@@ -573,6 +606,12 @@ def result_predict(value):
  
         
 
+#@app.callback(dd.Output('image_wc', 'src'), Input('image_wc', 'id'))
+#def make_image(b):
+ #   img = BytesIO()
+ #   plot_wordcloud(demo).save(img, format='PNG')
+  #  return 'data:image/png;base64,{}'.format(base64.b64encode(img.getvalue()).decode())
+        
 
 def parse_contents(contents, filename):
     
@@ -584,10 +623,13 @@ def parse_contents(contents, filename):
             # Assume that the user uploaded a CSV file
             df = pd.read_csv(
                 io.StringIO(decoded.decode('utf-8')))
+
         elif 'xls' in filename:
             # Assume that the user uploaded an excel file
             df = pd.read_excel(io.BytesIO(decoded))
+
     except Exception as e:
+
         return html.Div([
             'There was an error processing this file.'
         ])
@@ -723,6 +765,8 @@ def predict_data(list_content,filename):
         prediction = ValuePredictor(df.iloc[:,0])
 
 
+
+
         df['label'] = prediction
 
 
@@ -846,6 +890,33 @@ html.Div([
     ]
 
 
+@app.callback(Output('Wordcloud_img', 'src'),
+              Input('word', 'value'))
+def update_output(sentiment):
+
+        
+    if sentiment == 'Negative':
+        
+        img2 = BytesIO()
+        df_neg = demo[demo.iloc[:,1]==1]
+        plot_wordcloud(df_neg,'Reds').save(img2, format='PNG')
+        return 'data:image/png;base64,{}'.format(base64.b64encode(img2.getvalue()).decode())
+
+    elif sentiment == 'Neutral':
+        
+        img = BytesIO()
+        df_neut = demo[demo.iloc[:,1]==2]
+        plot_wordcloud(df_neut,'Greys').save(img, format='PNG')
+        
+        return 'data:image/png;base64,{}'.format(base64.b64encode(img.getvalue()).decode())
+
+    
+    elif sentiment == 'Positive':
+        
+        img = BytesIO()
+        df_pos = demo[demo.iloc[:,1]==1]
+        plot_wordcloud(df_pos,'Greens').save(img, format='PNG')
+        return 'data:image/png;base64,{}'.format(base64.b64encode(img.getvalue()).decode())
 
   
 
@@ -853,4 +924,4 @@ html.Div([
 # automatically update HTML display if a change is made to code
 if __name__ == '__main__':
     
-    app.run_server(debug=True)
+    app.server.run(debug=True)
