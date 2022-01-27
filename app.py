@@ -41,7 +41,7 @@ def ValuePredictor(to_predict):
     return predictions
 
 
-url_demo = 'https://github.com/aisyahrzk/newtest/blob/main/data/demoapp.xlsx?raw=true'
+url_demo = 'https://github.com/aisyahrzk/newtest/blob/main/data/test.xlsx?raw=true'
 #read data for data story
 demo = pd.read_excel(url_demo)
 
