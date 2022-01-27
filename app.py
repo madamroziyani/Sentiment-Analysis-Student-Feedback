@@ -16,7 +16,6 @@ import dash.dependencies as dd
 from io import BytesIO
 import tensorflow as tf
 import pandas as pd
-from wordcloud import WordCloud
 import base64
 from transformers import DistilBertTokenizerFast
 from transformers import TFDistilBertForSequenceClassification
@@ -60,27 +59,7 @@ def create_corpus(target,data):
     return corpus
 
 
-# generate wordcloud image
-def plot_wordcloud(data,color):
 
-    comment_words = ''
-    
-    for val in data.iloc[:,0]: 
-      
-    # typecaste each val to string 
-        val = str(val) 
-  
-    # split the value 
-        tokens = val.split() 
-      
-    # Converts each token into lowercase 
-        for i in range(len(tokens)): 
-            tokens[i] = tokens[i].lower() 
-      
-        comment_words += " ".join(tokens)+" "
-
-    wc = WordCloud(background_color='white', width=380, height=360,colormap = color).generate(comment_words)
-    return wc.to_image()
 
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -298,12 +277,7 @@ html.Div(dcc.RadioItems(id='word',
 
 html.Div([
 
-html.Div([
-    html.H6(children='Wordcloud',
-                    style={'textAlign': 'center',
-                           'color': 'white','size':20}),
-    html.Img(id = 'Wordcloud_img'),
-], className='create_container two columns'),
+
 
     html.Div([
 dcc.Graph(id = 'pie_chart',figure = {'data': [go.Pie(
@@ -599,12 +573,6 @@ def result_predict(value):
  
         
 
-#@app.callback(dd.Output('image_wc', 'src'), Input('image_wc', 'id'))
-#def make_image(b):
- #   img = BytesIO()
- #   plot_wordcloud(demo).save(img, format='PNG')
-  #  return 'data:image/png;base64,{}'.format(base64.b64encode(img.getvalue()).decode())
-        
 
 def parse_contents(contents, filename):
     
@@ -878,33 +846,6 @@ html.Div([
     ]
 
 
-@app.callback(Output('Wordcloud_img', 'src'),
-              Input('word', 'value'))
-def update_output(sentiment):
-
-        
-    if sentiment == 'Negative':
-        
-        img2 = BytesIO()
-        df_neg = demo[demo.iloc[:,1]==1]
-        plot_wordcloud(df_neg,'Reds').save(img2, format='PNG')
-        return 'data:image/png;base64,{}'.format(base64.b64encode(img2.getvalue()).decode())
-
-    elif sentiment == 'Neutral':
-        
-        img = BytesIO()
-        df_neut = demo[demo.iloc[:,1]==2]
-        plot_wordcloud(df_neut,'Greys').save(img, format='PNG')
-        
-        return 'data:image/png;base64,{}'.format(base64.b64encode(img.getvalue()).decode())
-
-    
-    elif sentiment == 'Positive':
-        
-        img = BytesIO()
-        df_pos = demo[demo.iloc[:,1]==1]
-        plot_wordcloud(df_pos,'Greens').save(img, format='PNG')
-        return 'data:image/png;base64,{}'.format(base64.b64encode(img.getvalue()).decode())
 
   
 
