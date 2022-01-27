@@ -1,24 +1,19 @@
 from tabnanny import check
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input,Output,State
 import plotly.graph_objs as go
 import pandas as pd
-from datetime import date, datetime
 import plotly.express as px
 from urllib.request import urlopen
-import dash_table_experiments as dt
 import io
 import json
 import numpy as np
-import dash_uploader as du
-import pickle
 from collections import defaultdict,Counter
 from nltk.corpus import stopwords
 import dash.dependencies as dd
-import dash_table
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -928,4 +923,4 @@ def update_output(sentiment):
 # automatically update HTML display if a change is made to code
 if __name__ == '__main__':
     
-    app.server.run(debug=True)
+    server = app.server.run(debug=True)
