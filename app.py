@@ -28,7 +28,7 @@ from transformers import TFDistilBertForSequenceClassification
 import torch
 
 
-filename = "C:/Users/user/Desktop/dash app ds project/model"
+filename = "./model"
 
 loaded_model = TFDistilBertForSequenceClassification.from_pretrained(filename)
 tokenizer = DistilBertTokenizerFast.from_pretrained(filename)
@@ -47,9 +47,9 @@ def ValuePredictor(to_predict):
     return predictions
 
 
-
+url_demo = 'https://github.com/aisyahrzk/newtest/blob/main/data/demoapp.xlsx?raw=true'
 #read data for data story
-demo = pd.read_excel('C:/Users/user/Desktop/data/demoapp.xlsx')
+demo = pd.read_excel(url_demo)
 
 positive,negative,neutral = demo.iloc[:, 1].astype('str').value_counts()
 
